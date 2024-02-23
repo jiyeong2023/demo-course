@@ -3,6 +3,7 @@ package com.teamsparta.democourse11.domain.course.model
 import com.teamsparta.democourse11.courseapplication.model.CourseApplication
 import com.teamsparta.democourse11.domain.lecture.model.Lecture
 import jakarta.persistence.*
+import org.springframework.data.jpa.domain.AbstractPersistable_.id
 
 @Entity
 @Table(name = "course")
@@ -66,7 +67,7 @@ class Course (
 
 }
 
-fun com.teamsparta.democourse11.domain.course.model.Course.toResponse(): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
+fun Course.toResponse(): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
     return com.teamsparta.democourse11.domain.course.dto.CourseResponse(
         id = id!!,
         title = title,

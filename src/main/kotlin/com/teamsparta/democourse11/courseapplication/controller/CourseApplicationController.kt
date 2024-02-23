@@ -52,5 +52,6 @@ class CourseApplicationController (
     ): return ResponseEntity
         .status(HttpStatus.OK)
         .body(
-            courseService.updateCourseApplicationStatus(courseId,applicationId,updateApplicationStatusRequest))
+            courseService.updateCourseApplicationStatus(
+                courseId,applicationId,updateApplicationStatusRequest))
 }
