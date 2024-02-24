@@ -1,6 +1,7 @@
 package com.teamsparta.democourse11.domain.course.model
 
 import com.teamsparta.democourse11.courseapplication.model.CourseApplication
+import com.teamsparta.democourse11.domain.course.dto.CourseResponse
 import com.teamsparta.democourse11.domain.lecture.model.Lecture
 import jakarta.persistence.*
 import org.springframework.data.jpa.domain.AbstractPersistable_.id
@@ -8,7 +9,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable_.id
 @Entity
 @Table(name = "course")
 class Course (
-    @Column(name = "title", nullable = false)//컬럼은 테이블이랑 어떤 매핑이된다 의미(이름= "테이블내이름", 상태= 필요시 )
+    @Column(name = "title" )//컬럼은 테이블이랑 어떤 매핑이된다 의미(이름= "테이블내이름", 상태= 필요시 )
     var title: String,//어플리케이션에서 쓰는 용어: 타입. 경우따라 위의 파리미터 내 이름과 동일하지 않아도 된다.
 
     @Column(name = "description")
@@ -34,7 +35,7 @@ class Course (
 
 ){
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //제네레이티벨류
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //제네레이티벨류 데이터베이스에 아이디 위임.
     var id: Long? = null
 
     fun isFull(): Boolean {
@@ -66,14 +67,14 @@ class Course (
     }
 
 }
-
-fun Course.toResponse(): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
-    return com.teamsparta.democourse11.domain.course.dto.CourseResponse(
+//에러부분: 패키지 구조 변경으로 코드에 반영된 것을 못봄. 콜스리스폰스에 있는 변수명과 다름(numApplication) 변경함,
+fun Course.toResponse(): CourseResponse {
+    return CourseResponse(
         id = id!!,
         title = title,
         description = description,
         status = status.name,
         maxApplicants = maxApplicants,
-        numApplicants = numApplicants,
+        numApplication = numApplicants,
     )
 }

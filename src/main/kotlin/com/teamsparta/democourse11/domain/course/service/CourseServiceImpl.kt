@@ -7,6 +7,10 @@ import com.teamsparta.democourse11.courseapplication.model.CourseApplication
 import com.teamsparta.democourse11.courseapplication.model.CourseApplicationStatus
 import com.teamsparta.democourse11.courseapplication.model.toResponse
 import com.teamsparta.democourse11.courseapplication.repository.CourseApplicationRepository
+import com.teamsparta.democourse11.domain.course.dto.CourseResponse
+import com.teamsparta.democourse11.domain.course.dto.CreateCourseRequest
+import com.teamsparta.democourse11.domain.course.dto.UpdateCourseRequest
+import com.teamsparta.democourse11.domain.course.model.Course
 import com.teamsparta.democourse11.domain.course.model.CourseStatus
 import com.teamsparta.democourse11.domain.course.model.toResponse
 import com.teamsparta.democourse11.domain.lecture.dto.AddLectureRequest
@@ -17,6 +21,7 @@ import com.teamsparta.democourse11.domain.lecture.dto.UpdateLectureRequest
 import com.teamsparta.democourse11.domain.lecture.model.Lecture
 import com.teamsparta.democourse11.domain.lecture.model.toResponse
 import com.teamsparta.democourse11.domain.lecture.repository.LectureRepository
+import com.teamsparta.democourse11.domain.user.repository.UserRepository
 import com.teamsparta.democourse11.exception.dto.ModelNotFoundException
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
@@ -24,29 +29,31 @@ import org.springframework.stereotype.Service
 
 
 @Service//클래스 하나에 다하기도 한다. 상황따라 인터페이스 만들고 구현을 따로 하기도 한다.
-class CourseServiceImpl (
+class CourseServiceImpl(// 트랙센션- c,u,d에 어노테이션을 걸어준다.
     private val courseRepository: CourseRepository,//테스트 위해 임의로 h2 빌드에 적용하면 사용가능함.(트래센션)
     private val lectureRepository: LectureRepository,
     private val courseApplicationRepository: CourseApplicationRepository,
-): CourseService{//콜스서비스 상속
-    override fun getAllCourseList(): List<com.teamsparta.democourse11.domain.course.dto.CourseResponse> {
+    private val userRepository: UserRepository,
+): CourseService{
+    //콜스서비스 상속
+    override fun getAllCourseList(): List<CourseResponse> {
         //TODO: 만약 couresId 기반으로 해당하는 Course가 없다면 throw ModelNotFoundException
         // TODO: DB에서 모든 Course를 가져와서 CourseResponse로 변환 후 반환
     return courseRepository.findAll().map { it.toResponse() }
     }
 //맥 커멘드+5= 상속받을 메소드 클릭하기
-    override fun getCourseById(courseId: Long): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
+    override fun getCourseById(courseId: Long): CourseResponse {
         // TODO: DB에서 courseId에 해당하는 Course를 가져와서 CourseResponse로 변환 후 반환
         //TODO: 만약 couresId 기반으로 해당하는 Course가 없다면 throw ModelNotFoundException
     val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
     return course.toResponse()
 }
   @Transactional
-    override fun createCourse(request: com.teamsparta.democourse11.domain.course.dto.CreateCourseRequest): com.teamsparta.democourse11.domain.course.dto.CourseResponse {//예외- 아이디가 없을경우.
+    override fun createCourse(request: CreateCourseRequest): CourseResponse {//예외- 아이디가 없을경우.
         // TODO: request를 Course로 변환 후 DB에 저장
 
       return courseRepository.save(
-          com.teamsparta.democourse11.domain.course.model.Course(
+          Course(
               title = request.title,
               description = request.description,
               status = CourseStatus.OPEN,
@@ -54,7 +61,7 @@ class CourseServiceImpl (
               ).toResponse()
   }//크리에이콜스도 세이브 하면 콜스가 저장이 되고, 저장이 되면 리턴으로 콜스 자체에 내용이 담겨서 나온다.
     @Transactional
-    override fun updateCourse(courseId: Long, request: com.teamsparta.democourse11.domain.course.dto.UpdateCourseRequest): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
+    override fun updateCourse(courseId: Long, request: UpdateCourseRequest): CourseResponse {
         //TODO: 만약 couresId 기반으로 해당하는 Course가 없다면 throw ModelNotFoundException
         // TODO: DB에서 courseId에 해당하는 Course를 가져와서 request로 업데이트 후 DB에 저장, 결과를 CourseResponse로 변환 후 반환
         val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
@@ -73,27 +80,9 @@ class CourseServiceImpl (
         val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
         courseRepository.delete(course)
     }
-    @org.springframework.transaction.annotation.Transactional
-    override fun updateCourse(courseId: Long, request: com.teamsparta.democourse11.domain.course.dto.UpdateCourseRequest): com.teamsparta.democourse11.domain.course.dto.CourseResponse {
-        // TODO: 만약 courseId에 해당하는 Course가 없다면 throw ModelNotFoundException
-        // TODO: DB에서 courseId에 해당하는 Course를 가져와서 request기반으로 업데이트 후 DB에 저장, 결과를 CourseResponse로 변환 후 반환
-        val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
-        val (title, description) = request
 
-        course.title = title
-        course.description = description
-
-        return courseRepository.save(course).toResponse()
-    } //업데이트 경우에는 먼저 콜스를 가져오고, 타이트 다스크리션을 리퀘스트로부터 보내고 한다음에
-
-    @Transactional
-    override fun deleteCourse(courseId: Long) {
-        // TODO: 만약 courseId에 해당하는 Course가 없다면 throw ModelNotFoundException
-        // TODO :DB에서 courseId에 해당하는 Course를 삭제, 연관된 CourseApplication과 Lecture도 모두 삭제
-        val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
-        courseRepository.delete(course)
-    }
-
+    //에러수정: 패키지구조 바꾸면서 코드에 반영된 것을 보지 못함.(임포트 바꾸는것에 신경씀) 인텔리제이 에러메시지 구글 검색 더 할 것.
+     //        동일한 코드를 오버로딩두번해서 에러냄, 서비스 인터페이스에 서비스 임플에 있는 코드와 달라서 에러남.
     @Transactional //트랙색션 어노테이션: 성공하지 못했을시 롤백을 한다. 성공시 앱종료되도 DB에 저장한다.
     override fun addLecture(courseId: Long, request: AddLectureRequest): LectureResponse {
         // TODO: 만약 courseId에 해당하는 Course가 없다면 throw ModelNotFoundException
@@ -116,8 +105,8 @@ class CourseServiceImpl (
         // TODO: 만약 courseId, lectureId에 해당하는 Lecture가 없다면 throw ModelNotFoundException
         // TODO: DB에서 courseId, lectureId에 해당하는 Lecture를 가져와서 LectureResponse로 변환 후 반환
         val lecture = lectureRepository.findByCourseIdAndId(courseId, lectureId)
-            ?: throw ModelNotFoundException("Lecture", lectureId)//해당코스아이디 렉쳐아아디 조회하기에 렉쳐를 가져왔습니다??
-
+            ?: throw ModelNotFoundException("Lecture", lectureId)//해당코스아이디 렉쳐아아디 조회하기에 렉쳐를 가져옴.
+    //에러부분: val~ find~(lectureId)는 렉치리포지토리에 렉처아이디: 자료형 추가함. 렉처리포지토리 find~ ?(nullable 허용)
         return lecture.toResponse()
     }
 
@@ -138,8 +127,7 @@ class CourseServiceImpl (
         // TODO: 만약 courseId, lectureId에 해당하는 Lecture가 없다면 throw ModelNotFoundException
         /* TODO: DB에서 courseId, lectureId에 해당하는 Lecture를 가져와서
             request로 업데이트 후 DB에 저장, 결과를을 LectureResponse로 변환 후 반환 */
-        val lecture = lectureRepository.findByCourseIdAndId(courseId, lectureId)//코스아이디와 렉쳐아이디 기반으로 조회한다음에
-            ?: throw ModelNotFoundException("Lecture", lectureId) //업데이트를 합니다??
+        val lecture = lectureRepository.findByCourseIdAndId(courseId, lectureId) ?: throw ModelNotFoundException("Lecture", lectureId) //코스아이디와 렉쳐아이디 기반으로 조회한다음에
 
         val (title, videoUrl) = request
         lecture.title = title
@@ -170,6 +158,7 @@ class CourseServiceImpl (
         val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
         val user = userRepository.findByIdOrNull(request.userId)
             ?: throw ModelNotFoundException("User", request.userId)
+       //에러부분: 유저레포지토리 생성자로 넣지 않아 생김. 유저레포지토리 생성자로 넣음.
 
         // Course 마감여부 체크
         if (course.isClosed()) {
@@ -186,15 +175,15 @@ class CourseServiceImpl (
             user = user,
         )
         course.addCourseApplication(courseApplication)
-        // CourseApplication에 영속성을 전파
+        // CourseApplication 영속성을 전파
         courseRepository.save(course)
 
         return courseApplication.toResponse()
     }
 
     override fun getCourseApplication(courseId: Long, applicationId: Long): CourseApplicationResponse {
-        // TODO: 만약 courseId, applicationId에 해당하는 CourseApplication이 없다면 throw ModelNotFoundException
-        // TODO: DB에서 courseId, applicationId에 해당하는 CourseApplication을 가져와서 CourseApplicationResponse로 변환 후 반환
+        // TODO: 만약 courseId, applicationId에 해당하는 CourseApplication 없다면 throw ModelNotFoundException
+        // TODO: DB에서 courseId, applicationId에 해당하는 CourseApplication 가져와서 CourseApplicationResponse 변환 후 반환
         val application = courseApplicationRepository.findByCourseIdAndId(courseId, applicationId)
             ?: throw ModelNotFoundException("CourseApplication", applicationId)
 
@@ -202,8 +191,8 @@ class CourseServiceImpl (
     }
 
     override fun getCourseApplicationList(courseId: Long): List<CourseApplicationResponse> {
-        // TODO: 만약 courseId에 해당하는 Course가 없다면 throw ModelNotFoundException
-        // TODO: DB에서 courseId에 해당하는 Course를 가져오고, 하위 courseApplication들을 CourseApplicationResponse로 변환 후 반환
+        // TODO: 만약 courseId에 해당하는 Course 없다면 throw ModelNotFoundException
+        // TODO: DB에서 courseId에 해당하는 Course 가져오고, 하위 courseApplication CourseApplicationResponse 변환 후 반환
 
         val course = courseRepository.findByIdOrNull(courseId) ?: throw ModelNotFoundException("Course", courseId)
 
@@ -241,7 +230,7 @@ class CourseServiceImpl (
             CourseApplicationStatus.ACCEPTED.name -> {
                 // 승인 처리
                 application.accept()
-                // Course의 신청 인원 늘려줌
+                // Course 신청 인원 늘려줌
                 course.addApplicant()
                 // 만약 신청 인원이 꽉 찬다면 마감 처리
                 if (course.isFull()) {

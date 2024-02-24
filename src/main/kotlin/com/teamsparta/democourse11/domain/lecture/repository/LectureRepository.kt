@@ -7,5 +7,5 @@ interface LectureRepository : JpaRepository<Lecture, Long> {
 
     //  fun findByCourseIdAndId(courseId: Long, lectureId: Long): Lecture?
 
-    fun findByCourseIdAndId(courseId: Long): List<Lecture>
+    fun findByCourseIdAndId(courseId: Long, lectureId: Long): List<Lecture>?
 }

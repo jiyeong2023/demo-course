@@ -18,10 +18,9 @@ interface CourseService {
     fun updateCourse(courseId: Long, request: com.teamsparta.democourse11.domain.course.dto.UpdateCourseRequest) : com.teamsparta.democourse11.domain.course.dto.CourseResponse
 
     fun deleteCourse(courseId: Long)
-
-
-    fun getLecture(courseId: Long): List<LectureResponse>
-
+//에러부분: 콜스 서비스 인터페이스에서 코드와 콜스 서비스임플 코드 네이밍이 맞지 않음. 그럴경우 추상메소드등 에러메시지뜸.
+    fun getLecture(courseId: Long, lectureId: Long): LectureResponse
+    fun getLectureList(courseId: Long): List<LectureResponse>
     fun addLecture(courseId: Long, request: AddLectureRequest): LectureResponse
 
     fun updateLecture(
